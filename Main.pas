@@ -899,7 +899,6 @@ end;
 //{$else}
 
 
-function PrintOut(r: string):string;
 function crc(s: string):Word;
 const
 crc16htab: array[0..255] of byte = (
@@ -983,6 +982,8 @@ begin
   end;
   Result := (hi shl 8) or lo;
 end;
+
+function PrintOut(r: string):string;overload;
 begin
    if dr=Thermal Then begin
      PrintOutTh(r);
@@ -995,6 +996,99 @@ begin
      Else Result:=r;
    r:=Format(#2+'%s#%.4X'#3,[r,crc(r)]);
    MainForm.ComPort1.WriteStr(r);
+end;
+
+function PrintOut(func: String; ap: array of string):string;overload;
+var s: String;
+    i: Integer;
+begin
+  for i:=Low(ap) To High(ap) do
+      func:=func+#9+ap[i];
+  Result:=PrintOut(func);
+end;
+
+function Pytanie(const funkcja, answer: string):String;
+var x: Word;
+begin
+  Result:='';
+  x:=Pos(#9+answer,funkcja);
+  if x=0 Then Exit;
+  inc(x,Length(answer)+1);
+  Result:=Copy(funkcja,x,maxint);
+  x:=Pos(#9,Result);
+  if x>0 then SetLength(Result,x-1);
+end;
+
+{$ifdef EVALON}
+function Rozkaz(r: string):string;overload;
+const CBaudRate: array[TBaudRate] of Integer =
+    (0, CBR_110, CBR_300, CBR_600, CBR_1200, CBR_2400, CBR_4800, CBR_9600,
+     CBR_14400, CBR_19200, CBR_38400, CBR_56000, CBR_57600, CBR_115200,
+     CBR_128000, CBR_256000);
+
+var x,y,L: Word;
+    i: Integer;
+    s,t: string;
+begin
+   //MainForm.ComPort1.ClearBuffer(True,False);
+   MainForm.ComPort1.ReadStr(s,MainForm.ComPort1.InputCount);
+   r:=PrintOut(r);
+   L:=Pos(#9,r)+7;
+   i:=CBaudRate[MainForm.ComPort1.BaudRate];
+   if i=0 then i:=MainForm.ComPort1.CustomBaudRate;
+   Sleep(Max(1,230400 div i));
+   repeat
+     y:=Length(s);
+     x:=Pos(#2,s);
+     while (x=0) do begin
+         x:=max(L,MainForm.ComPort1.InputCount);
+         SetLength(s,y+x);
+         x:=MainForm.ComPort1.Read(s[y+1],x);
+         if (x=0) and (IDRETRY<>Application.MessageBox(PChar(r),'Czekam na drukarkê', MB_RETRYCANCEL + MB_ICONHAND ))
+          then Raise EInOutError.Create('Przekroczony czas oczekiwania na odpowiedŸ drukarki: '+r);
+         inc(y,x);
+         SetLength(s,y);
+         x:=Pos(#2,s);
+     end;
+     Delete(s,1,x);
+     dec(y,x);
+     x:=Pos(#3,s);
+     while (x=0) do begin
+       x:=max(1,MainForm.ComPort1.InputCount);
+       SetLength(s,y+x);
+       x:=MainForm.ComPort1.Read(s[y+1],x);
+       if (x=0) and (IDRETRY<>Application.MessageBox(PChar(r),'Czekam na drukarkê', MB_RETRYCANCEL + MB_ICONHAND ))
+          then Raise EInOutError.Create('Przekroczony czas oczekiwania na odpowiedÅº drukarki: '+r);
+       inc(y,x);
+       SetLength(s,y);
+       x:=Pos(#3,s);
+     end;
+     Result:=Copy(s,1,x-6);    //data
+     t:=Copy(s,x-5,5); //crc
+     t[1]:='$';
+     y:=crc(Result);
+
+     if y<>StrToIntDef(t,0)
+        Then Raise EInOutError.Create('B³¹d sumy kontrolnej odpowiedzi drukarki podczas wykonywania rozkazu:'#10+r+#10+s);
+
+     t:=Pytanie(Result,'?');
+     if (t>'') Then begin
+       Delete(Result,Length(Result),1);
+       Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[t]);
+     end;
+
+     Delete(s,1,x); //jeden rozkaz mniej w buforze
+
+     y:=Max(Pos(#9,r),Pos(#9,Result))-1;
+   until Copy(Result,1,y) = Copy(r,1,y);
+   Delete(Result,1,y);
+end;
+{$else}
+
+function Pytanie(const funkcja, answer: string):String;overload;
+begin
+  Result:=Copy(funkcja,Pos(#9+answer,funkcja)+3,maxint);
+  SetLength(Result,Pos(#9,Result)-1);
 end;
 
 function Rozkaz(r: string):shortstring;overload;
@@ -1065,14 +1159,8 @@ begin
    Result:=Copy(Result,2,pos(#9,Result)-2);
    Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[Result]);
 end;
-
-function Pytanie(const funkcja, answer: string):String;overload;
-begin
-  Result:=Copy(funkcja,Pos(#9+answer,funkcja)+3,maxint);
-  SetLength(Result,Pos(#9,Result)-1);
-end;
-
-function Rozkaz(func: String; ap: array of string):shortstring;overload;
+{$endif}
+function Rozkaz(func: String; ap: array of string):string;overload;
 var i: Integer;
 begin
   for i:=Low(ap) To High(ap) do
@@ -3756,6 +3844,8 @@ procedure TMainForm.AWagaExecute(Sender: TObject);
 var s: String;
     w: Currency;
     v: Variant;
+    c: Char;
+
 begin
   if not ComPortWaga.Connected Then Exit;
   ComPortWaga.ClearBuffer(True,True);
@@ -3770,9 +3860,13 @@ begin
     ComPortWaga.ReadStr(s,12);
     s:=copy(s,4,7);
   end;
-  DecimalSeparator:='.';
-  W:=StrToCurr(s);
-  DecimalSeparator:=',';
+  c:=DecimalSeparator;
+  try
+    DecimalSeparator:='.';
+    W:=StrToCurr(s);
+  finally
+    DecimalSeparator:=c;
+  end;
   if w=0 Then Exit;
   razem;
   m.il:=w;
@@ -3821,6 +3915,7 @@ var buf,s: String;
     j,k: Integer;
     i,c,p,r,ip: Currency;
     v: Variant;
+    d: Char;
 begin
      if Kasjer='' Then Exit;
      With TStringGrid(Sender) do begin
@@ -3861,10 +3956,14 @@ begin
      if (j>0) and (j<k) Then begin
         //Razem;
         s:=copy(buf,1,j-1);
+        d:=DecimalSeparator;
+        try
         if pos('.',s)<>0 Then DecimalSeparator:='.';
         p:=StrToCurr(s);
+        finally
+        DecimalSeparator:=d;
+        end;
         i:=i*p;
-        DecimalSeparator:=',';
         buf:=copy(buf,j+1,maxint);
         dec(k,j);
      end;
@@ -3872,9 +3971,13 @@ begin
      if (j>0) and (j<k) Then begin
         //Razem;
         s:=copy(buf,1,j-1);
+        d:=DecimalSeparator;
+        try
         if pos('.',s)<>0 Then DecimalSeparator:='.';
         c:=StrToCurr(s);
-        DecimalSeparator:=',';
+        finally
+        DecimalSeparator:=d;
+        end;
         buf:=copy(buf,j+1,maxint);
         dec(k,j);
      end;
@@ -3937,6 +4040,7 @@ var buf,s,n,na,jm: String;
       v: Variant;
       r: TRect;
       c,ce,i,il: Currency;
+      d: Char;
 begin
   with TStringGrid(Sender) do begin
 
@@ -4002,9 +4106,13 @@ begin
          j:=pos('i',buf);
          if (j>0) and (j<l) Then begin
            s:=copy(buf,1,j-1);
+        d:=DecimalSeparator;
+        try
            if pos('.',s)<>0 Then DecimalSeparator:='.';
            i:=strtocurr(s);
-           DecimalSeparator:=',';
+        finally
+        DecimalSeparator:=d;
+        end;
            buf:=copy(buf,j+1,maxint);
            dec(k,j);
            dec(l,j);
@@ -4015,9 +4123,13 @@ begin
          j:=pos('c',buf);
          if (j>0) and (j<k) Then begin
            s:=copy(buf,1,j-1);
+        d:=DecimalSeparator;
+        try
            if pos('.',s)<>0 Then DecimalSeparator:='.';
            c:=strtocurr(s);
-           DecimalSeparator:=',';
+        finally
+        DecimalSeparator:=d;
+        end;
            buf:=copy(buf,j+1,maxint);
            dec(k,j);
            dec(l,j);
@@ -5499,6 +5611,7 @@ procedure TMainForm.FormActivate(Sender: TObject);
 var s: string;
     x: Integer;
     tm: SYSTEMTIME;
+    d: Char;
 begin
 
   if WindowState=wsMaximized then begin
@@ -5649,13 +5762,14 @@ begin
       x:=pos('/',s);
       s:=copy(s,x+1,4);
       DisplayList[1]:=s;
+      d:=DecimalSeparator;
       Try
         DecimalSeparator:='.';
         Wersja:=StrToCurr(s);
       Except
         Wersja:=0;
       end;
-      DecimalSeparator:=',';
+      DecimalSeparator:=d;
 
       s:=RozkazTh('#s',False);
       x:=WordCount(s,['/']);
@@ -5669,19 +5783,20 @@ begin
     Posnet: begin
       ErrorList.LoadFromFile('Error.txt');
       s:=Rozkaz('sid');
-      DisplayList[0]:=Copy(s,3,colnum);
+      DisplayList[0]:=Copy(s,2,colnum);
+      DisplayList[1]:=Copy(s,2+colnum,colnum);
       s:=Pytanie(s,'vr');
-      DisplayList[1]:=s;
+      d:=DecimalSeparator;
       Try
         DecimalSeparator:='.';
         Wersja:=StrToCurr(s);
       Except
         Wersja:=0;
       end;
-      DecimalSeparator:=',';
+      DecimalSeparator:=d;
 
       s:=Rozkaz('scomm');
-      DisplayList[2]:=s;
+      DisplayList[2]:=Copy(s,2,colnum);
       s:=Pytanie(s,'ts');
 
         if s[1]<>'0' then begin
@@ -5692,14 +5807,15 @@ begin
            '3' : s:='opakowania';
            '4' : s:='faktura';
           end;
-          DisplayList[2]:='Rozpoczêta transakcja: '+s;
+          DisplayList[0]:='Rozpoczêta transakcja:';
+          DisplayList[1]:='          '+s;
         end;
 
       s:=Pytanie(Rozkaz('scnt'),'bn');
       DisplayList[3]:='Ostatni paragon: '+s;
       parnum:=StrToIntDef(s,0);
 
-      Rozkaz('discounttypeset'#9'dt1');
+      PrintOut('discounttypeset'#9'dt1');
     end;
     Farex: begin
       ErrorList.LoadFromFile('ErrorFr.txt');
