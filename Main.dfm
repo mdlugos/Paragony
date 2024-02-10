@@ -2603,7 +2603,7 @@ object MainForm: TMainForm
       Top = 0
       Width = 748
       Height = 659
-      ActivePage = tsSpec
+      ActivePage = ts0
       Align = alClient
       MultiLine = True
       OwnerDraw = True
@@ -4825,6 +4825,8 @@ object MainForm: TMainForm
     AdsServerTypes = [stADS_LOCAL]
     LoginPrompt = False
     StoreConnected = False
+    Compression = ccAdsCompressionNotSet
+    CommunicationType = ctAdsDefault
     Left = 152
     Top = 104
   end
@@ -5513,8 +5515,12 @@ object MainForm: TMainForm
   end
   object AdsSettings1: TAdsSettings
     DateFormat = 'yyyy-MM-dd'
+    NumDecimals = 2
+    SetDelphiDate = True
     ShowDeleted = False
     AdsServerTypes = [stADS_LOCAL]
+    NumCachedTables = 0
+    NumCachedCursors = 25
     Left = 120
     Top = 104
   end
@@ -5958,6 +5964,8 @@ object MainForm: TMainForm
     AdsServerTypes = [stADS_LOCAL]
     LoginPrompt = False
     StoreConnected = False
+    Compression = ccAdsCompressionNotSet
+    CommunicationType = ctAdsDefault
     Left = 24
     Top = 160
   end
@@ -6327,6 +6335,7 @@ object MainForm: TMainForm
     Filter = 'P_R<>"P"'
     Filtered = True
     IndexFieldNames = 'NAZWA'
+    StoreActive = True
     AdsConnection = AdsConnection1
     AdsTableOptions.AdsLockType = Compatible
     AdsTableOptions.AdsCharType = OEM
