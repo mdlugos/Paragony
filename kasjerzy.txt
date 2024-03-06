@@ -2,7 +2,7 @@
 753 Jadwiga Balcer
 313 Joanna Duraj
 159 MAREK POLOK
-555 GRAZYNA POLOK
+555 GRAΩYNA POLOK
 163 Aleksandra Pilch
 543 Anna Pilch
 642 Aleksandra Waleczek
@@ -16,7 +16,7 @@
 180 Wioleta Karpiel
 247 Czudek sylwia
 252 Agnieszka Pawlitko
-164 Dorota Micha≥ek 
+164 Dorota Michaàek 
 987 Adam Polok
 
 385 Sylwia Sikora
@@ -24,7 +24,7 @@
 497 Mateusz Polok
 571 Agnieszka ùoòko
 225 Trzaskalik Barbara
-183 Wiúniewska Magdalena
+183 Wiòniewska Magdalena
 287 Dorota Kubaszewska
 535 Klaudia Wojtas
 256 Mariola Kotowska
@@ -41,11 +41,11 @@
 
 576 Agnieszka Kolek
 915 Patrycja Tomica
-365 Micha≥ Wrona
+365 Michaà Wrona
 764 Renata Kawulok
 459 Kamil Chrapek
 098 Marzena Cichy
-385 MA≥gorzata 
+385 Maàgorzata 
 235 Honorata Winkowska
 176 Agnieszka Worek
 
@@ -69,11 +69,11 @@
 520 Sikora Magdalena
 761 Anna Polok
 
-240 Iwona Cieúlar
+240 Iwona Cieòlar
 145 Irina Cybulska
-358 Agnieszka KsiÍøak
+358 Agnieszka Ksi©æak
 991 Monika Tomica
-198 Graøyna Domasik
+198 Graæyna Domasik
 710 Galyna Khodiak
 170 Ania Pietrzyk
 174 Ksenia Hernik
@@ -82,7 +82,7 @@
 998 Mirka Diachuk
 221 Monika Dziadek
 611 Magdalena Konieczny
-223 Angelika Macha≥a
+223 Angelika Machaàa
 501 Agnieszka Kabiesz
 070 Diakowska Kamila
-352 Anna Seku≥a
+352 Anna Sekuàa

@@ -1085,13 +1085,6 @@ begin
    Delete(Result,1,y); //kasujemy kod rozkazu
 end;
 {$else}
-
-function Pytanie(const funkcja, answer: string):String;overload;
-begin
-  Result:=Copy(funkcja,Pos(#9+answer,funkcja)+3,maxint);
-  SetLength(Result,Pos(#9,Result)-1);
-end;
-
 function Rozkaz(r: string):shortstring;overload;
 var x: Byte;
 begin
@@ -4730,6 +4723,7 @@ end;
 procedure TMainForm.Timer1Timer(Sender: TObject);
   const tm: TDateTime = 0.0;
         fc: Byte = 20;
+        inside: Boolean = False;
   var p,q,r,s,t: String;
   l: TStringList;
   d: TDate;
@@ -4739,7 +4733,7 @@ procedure TMainForm.Timer1Timer(Sender: TObject);
   i: Integer;
 {$endif}
 begin
-  if Application.Terminated or ( sender<>nil ) and ( Time<tm ) or
+  if inside or Application.Terminated or ( sender<>nil ) and ( Time<tm ) or
 {$ifdef MULTIPAR}
    (not ParJob.Active or not ParJob.isempty and (ParJobIndex.AsString<>'KONIEC'))
 {$else}
@@ -4747,6 +4741,7 @@ begin
 {$endif}
    Then Exit;
 
+  inside:=True;
   tm:=Time+1/8192;
 
   Paragony.AdsFlushFileBuffers;
@@ -5014,7 +5009,9 @@ begin
   end;
   except // nie czyta pytan z hosta
      FindClose(f);
+     inside:=False;
   end;
+  inside:=False;
 end;
 
 procedure TMainForm.SpeedButton15Click(Sender: TObject);

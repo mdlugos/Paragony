@@ -2084,7 +2084,7 @@ object MainForm: TMainForm
       Font.Name = 'Lucida Console'
       Font.Style = []
       PanelHeight = 64
-      PanelWidth = 268
+      PanelWidth = 269
       ParentFont = False
       TabOrder = 1
       TabStop = False
@@ -4821,7 +4821,7 @@ object MainForm: TMainForm
     end
   end
   object AdsConnection1: TAdsConnection
-    ConnectPath = 'E:\m\polok\paragony'
+    ConnectPath = '.\'
     AdsServerTypes = [stADS_LOCAL]
     LoginPrompt = False
     StoreConnected = False
