@@ -9,7 +9,7 @@ uses
 {$ifdef ELZAB}
   winomeg,
 {$endif}
-{$ifdef EVALON}
+{$ifdef ELAVON}
   ECRUtilATLLib_TLB,
 {$endif}
   CPort, CPortCtl, RXCtrls, DBCGrids, Clipbrd, ToolEdit, Mask, FR_Class,
@@ -498,7 +498,7 @@ end;
 
 const colnum = 20;
 
-{$ifdef EVALON}
+{$ifdef ELAVON}
 const TerminalStates : array[0..33] of PChar = (
         'UNKNOWN','IDLE','BUSY','CARD_INSERT','PIN_ENTRY_FIRST_ATTEMPT','PIN_ENTRY_SECOND_ATTEMPT','PIN_ENTRY_THIRD_ATTEMPT',
         'PIN_ENTRY_FAILED','GRATUITY_ENTRY','AUTHORIZING','COMPLETION','CANCELLED','AMOUNT_CONFIRMATION','SENDING','RECEIVING',
@@ -1019,7 +1019,7 @@ begin
   if x>0 then SetLength(Result,x-1);
 end;
 
-{$ifdef EVALON}
+{$ifdef ELAVON}
 function Rozkaz(r: string):string;overload;
 const CBaudRate: array[TBaudRate] of Integer =
     (0, CBR_110, CBR_300, CBR_600, CBR_1200, CBR_2400, CBR_4800, CBR_9600,
@@ -1524,7 +1524,7 @@ end;
 procedure TMainForm.ZerujP(Sh: Boolean);
 
 (*
-{$ifdef EVALON}
+{$ifdef ELAVON}
 //TransactionResp
 procedure PrintReceipt;
 const EntryMethods: array[0..7] of PChar = (
@@ -1646,7 +1646,7 @@ end;
 begin
   if keylock>1 then keylock:=1;
   with m^ do begin
-(*{$ifdef EVALON}
+(*{$ifdef ELAVON}
   if Length(TerminalTransactions)>0 then PrintReceipt;
   SetLength(TerminalTransactions,0);
 {$endif}*)
@@ -2874,7 +2874,7 @@ begin
         IF (lp=0) and (tz=0) and (tkz=0) and (tk=0)
            Then Exit;
        }
-       //{$ifdef EVALON}
+       //{$ifdef ELAVON}
         {$ifdef MULTIPAR}
           //teoretycznie mo¿liwoœæ cofniecia sie i dokupienia, stornowania a w miedzyczasie inny paragon leci
           //ale czy nie lepiej jak klient widzi ju¿ na drukarce swoj¹ kwote?
@@ -3667,7 +3667,7 @@ begin
   end;
   if a<=0 Then Exit;
   Edit1.Text:='Zap³ata Kart¹';
-{$ifdef EVALON}
+{$ifdef ELAVON}
   if (TerminalIP<>'') and (a>0) then repeat
     with CoStatus.Create do begin
       GetTerminalState;
@@ -5874,7 +5874,7 @@ begin
   Edit1.SetFocus;
   Edit1.SelectAll;
 
-{$ifdef EVALON}
+{$ifdef ELAVON}
   s:=FormStorage1.StoredValue['TerminalIP'];
   TerminalIP:='';
   if s<>'NUL' then begin
