@@ -1085,13 +1085,6 @@ begin
    Delete(Result,1,y); //kasujemy kod rozkazu
 end;
 {$else}
-
-function Pytanie(const funkcja, answer: string):String;overload;
-begin
-  Result:=Copy(funkcja,Pos(#9+answer,funkcja)+3,maxint);
-  SetLength(Result,Pos(#9,Result)-1);
-end;
-
 function Rozkaz(r: string):shortstring;overload;
 var x: Byte;
 begin
