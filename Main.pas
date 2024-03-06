@@ -446,7 +446,7 @@ var
 
 implementation
 
-uses RFO, Fak, UnitSp;
+uses RFO, UnitSp;
 
 {$R *.DFM}
 {$ifdef ZAGRODA}
@@ -469,7 +469,7 @@ uses RFO, Fak, UnitSp;
 {$endif}
 
 type TKar = record
-  kak: string;
+  kak, kan: string;
   il,ka,p: currency; //1-wydane, -1 przyjete
 end;
 
@@ -478,7 +478,7 @@ end;
 Tdr = ( None, Thermal , Posnet, Farex, Elzab );
 
 type TAk = record
-  Tow, Kak, Nb, nz, firmy_naz, firmy_adr, firmy_nip, firmy_fak, prior_nip :string;
+  Tow, Kak, Kan, Nb, nz, firmy_naz, firmy_adr, firmy_nip, firmy_fak, prior_nip :string;
   il,ilp,rk,ce,w,ws,ts,rzp,rzk,rzt,rp,ka,ki,tp,tk,tz,tkz,rt,rkt,rpt,rs,rks,rps,rkp,wc,wb,wg,wk: Currency;
   // rk, rs, rks, rt, rkt rabat kwotowy pozycji i podsumy;
   // rp, rps, rpt rabat proc pozycji i podsumy;
@@ -1027,16 +1027,14 @@ const CBaudRate: array[TBaudRate] of Integer =
      CBR_128000, CBR_256000);
 
 var x,y,L: Word;
-    i: Integer;
     s,t: string;
 begin
    //MainForm.ComPort1.ClearBuffer(True,False);
    MainForm.ComPort1.ReadStr(s,MainForm.ComPort1.InputCount);
    r:=PrintOut(r);
    L:=Pos(#9,r)+7;
-   i:=CBaudRate[MainForm.ComPort1.BaudRate];
-   if i=0 then i:=MainForm.ComPort1.CustomBaudRate;
-   Sleep(Max(1,230400 div i));
+   Sleep(CBaudRate[br256000] div CBaudRate[MainForm.ComPort1.BaudRate]);
+   //s:='' bo sprawdzamy odpowiedzi poprzednich PrintOut -ów
    repeat
      y:=Length(s);
      x:=Pos(#2,s);
@@ -1058,7 +1056,7 @@ begin
        SetLength(s,y+x);
        x:=MainForm.ComPort1.Read(s[y+1],x);
        if (x=0) and (IDRETRY<>Application.MessageBox(PChar(r),'Czekam na drukarkê', MB_RETRYCANCEL + MB_ICONHAND ))
-          then Raise EInOutError.Create('Przekroczony czas oczekiwania na odpowiedÅº drukarki: '+r);
+          then Raise EInOutError.Create('Przekroczony czas oczekiwania na odpowiedŸ drukarki: '+r);
        inc(y,x);
        SetLength(s,y);
        x:=Pos(#3,s);
@@ -1068,8 +1066,13 @@ begin
      t[1]:='$';
      y:=crc(Result);
 
-     if y<>StrToIntDef(t,0)
-        Then Raise EInOutError.Create('B³¹d sumy kontrolnej odpowiedzi drukarki podczas wykonywania rozkazu:'#10+r+#10+s);
+     if (y<>StrToIntDef(t,0)) then begin
+        t:='B³¹d sumy kontrolnej odpowiedzi drukarki podczas wykonywania rozkazu:'#10+r+#10+s;
+        if (IDRETRY<>Application.MessageBox(PChar(t),'B³¹d sumy kontrolnej odpowiedzi drukarki', MB_RETRYCANCEL + MB_ICONHAND ))
+        Then Raise EInOutError.Create(t);
+     end;
+
+     Delete(s,1,x); //jeden rozkaz mniej w buforze
 
      t:=Pytanie(Result,'?');
      if (t>'') Then begin
@@ -1077,11 +1080,9 @@ begin
        Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[t]);
      end;
 
-     Delete(s,1,x); //jeden rozkaz mniej w buforze
-
      y:=Max(Pos(#9,r),Pos(#9,Result))-1;
    until Copy(Result,1,y) = Copy(r,1,y);
-   Delete(Result,1,y);
+   Delete(Result,1,y); //kasujemy kod rozkazu
 end;
 {$else}
 
@@ -1651,7 +1652,7 @@ begin
 {$endif}*)
   prior_nip:=firmy_nip;
   firmy_nr:=0;firmy_naz:='';firmy_adr:='';firmy_nip:='';firmy_fak:='';
-  Tow:='';Kak:='';nb:='';nz:='';
+  Tow:='';Kak:='';Kan:='';nb:='';nz:='';
   il:=0;ilp:=0;rk:=0;ce:=0;w:=0;ws:=0;ts:=0;rzk:=0;rzp:=0;rzt:=0;rp:=0;ka:=0;ki:=0;tp:=0;tk:=0;tz:=0;
   tkz:=0;rkt:=0;rpt:=0;rt:=0;rs:=0;rks:=0;rps:=0;rkp:=0;wc:=0;wb:=0;wg:=0;wk:=0;lp:=0;lp_printed:=0;
   aka:=nil;
@@ -1976,6 +1977,7 @@ var a: Currency;
       i:=Length(aka);
       setlength(aka,i+1);
       aka[i].kak:=kak;
+      aka[i].kan:=kan;
       aka[i].ka:=ka;
       aka[i].il:=ki*il*p;
       aka[i].p:=p;
@@ -2031,6 +2033,7 @@ begin
   ki:=0;
   zwrot:=#0;
   kak:='';
+  kan:='';
   tow:='';
   nb:='';
   showline(False);
@@ -2166,7 +2169,7 @@ begin
 
    s:='';
    repeat
-    v:=Cennik.Lookup('INDEX',buf,{$ifdef STANY}'JM;CENA;TANDEM;STAN;PLAC;PROMOCJA'{$else}'JM;CENA;TANDEM;CENA_H;RABAT;WAZNOSC;PROMOCJA'{$endif});
+    v:=Cennik.Lookup('INDEX',buf,{$ifdef STANY}'JM;CENA;TANDEM;STAN;PLAC;PROMOCJA;NAZWA'{$else}'JM;CENA;TANDEM;CENA_H;RABAT;WAZNOSC;NAZWA;PROMOCJA'{$endif});
 
     if not VarIsArray(v) then begin
      //Windows.Beep(1000,500);
@@ -2199,8 +2202,8 @@ begin
        Then v[4]:=0;
     if v[5]=Null
        Then v[5]:=0;
-    if v[6]=Null
-       Then v[6]:=False;
+    if v[7]=Null
+       Then v[7]:=False;
 {$endif}
    if (m.zwrot=#0) and ((buf<>m.tow) or (m.ce-z<>0) or (m.rk<>0)
     {$ifdef HURT} and (m.rp=0) (*or (m.rp<>varastype(v[4],varCurrency))*){$endif}) then
@@ -2217,7 +2220,7 @@ begin
 
 {$ifdef HURT}
    if (m.il>=v[5]) and (m.rp=0) and (m.rk=0) then begin
-     if VarAsType(v[6],varBoolean)
+     if VarAsType(v[7],varBoolean)
         Then m.rzp:=v[4]
         Else m.rp:=v[4];
    end;
@@ -2250,12 +2253,13 @@ begin
      buf:=v[2];
      i:=pos('B',buf)+1;
      s:=Copy(buf,i,maxint);
-     u:=Cennik.Lookup('INDEX','B'+s,'CENA');
-     if not VarIsNull(u)
+     u:=Cennik.Lookup('INDEX','B'+s,'CENA;NAZWA');
+     if VarIsArray(u)
      Then begin
         m.ki:=strToIntDef(Copy(buf,1,i-2),1);
-        m.ka:=u;
+        m.ka:=u[0];
         m.kak:=s;
+        m.kan:=u[1];
      end;
    end;
 
@@ -2315,6 +2319,7 @@ begin
      m.rabpktpoz:=0;
 {$endif}
      m.kak:=copy(buf,2,maxint);
+     m.kan:=v[6];
      showline(True);
      razem;
      Edit1.Text:='ILOŒÆ/KOD';
@@ -2354,6 +2359,7 @@ var a,t: Currency;
     r,s: String;
     l: TStringList;
     v: Variant;
+//    ap: array of string;
 //    e: TDataSetNotifyEvent;
 begin
   with m^ do begin
@@ -2451,8 +2457,8 @@ begin
           Posnet: begin
             Rozkaz('trpackinit');
             for i:=0 to length(aka)-1 do
-              PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9,
-                   [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100),aka[i].il]));
+              PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
+                   [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100.0),aka[i].il,aka[i].kan]));
             aka:=nil;
             end;
         end;
@@ -2529,22 +2535,31 @@ begin
               if wb<0  //wg+wc+wb+wk>t
                 Then PrintOut(Format('trpayment'#9're1'#9'ty4'#9'naBON UA'#9'wa%.0f'#9,[-wb*100])); //(wg+wc+wb+wk-t)*100
 
-              PrintOut(Format('trpayment'#9're1'#9'ty0'#9'wa%.0f'#9,[a*100])); //(wg+wc+wb+wk-t)*100
+              if a<>0
+                Then PrintOut(Format('trpayment'#9're1'#9'ty0'#9'wa%.0f'#9,[a*100])); //(wg+wc+wb+wk-t)*100
 
-              s:=Format('trend'#9'fe%d'#9'to%.0f'#9'op%.0f'#9'om%.0f'#9'fp%.0f'#9're%.0f',
-                     [{iif((aka=nil),1,0)}0,(tp-rkt)*100,tk*100,tkz*100,(wg+wc+max(wb,0)+wk+tz)*100,(a+max(0,-wb))*100]); //(wg+wc+wb+wk-t)*100
+              a:=a+max(0,-wb);
+              s:='trend'#9;
+              if tp<>0   then s:=s+Format('to%.0f'#9,[(tp-rkt)*100]);
+              if tk<>0   then s:=s+Format('op%.0f'#9,[tk*100]);
+              if tkz<>0  then s:=s+Format('om%.0f'#9,[tkz*100]);
+              if (wg+wc+max(wb,0)+wk+tz)<>0 then s:=s+Format('fp%.0f'#9,[(wg+wc+max(wb,0)+wk+tz)*100]);
+              if a<>0 then s:=s+Format('re%.0f'#9,[a*100]);
+              if (aka<>nil) or ((firmy_nip<>'') and (wersja<20.01)) then s:=s+Format('fe%d'#9,[0]);
+
+              //Format('trend'#9'fe%d'#9'to%.0f'#9'op%.0f'#9'om%.0f'#9'fp%.0f'#9're%.0f',
+              //       [{iif((aka=nil),1,0)}0,(tp-rkt)*100,tk*100,tkz*100,(wg+wc+max(wb,0)+wk+tz)*100,a*100]); //(wg+wc+wb+wk-t)*100
               Rozkaz(s);
 
+              if (aka<>nil) or ((firmy_nip<>'') and (wersja<20.01)) Then begin
+                if (aka<>nil) then for i:=0 To Length(aka)-1 do
+                  PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
+                       [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100.0),aka[i].il,aka[i].kan]));
+                if (firmy_nip<>'') and (wersja<20.01) then PrintOut('trftrln'#9'id30'#9'naNIP nabywcy '+firmy_nip);
 
-              if (aka<>nil) Then begin
-                for i:=0 To Length(aka)-1 do
-                  PrintOut(Format('trpackprnend'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9,
-                        [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100),aka[i].il]));
+                Rozkaz('trftrend');
               end;
 
-              if (firmy_nip<>'') and (wersja<20.01) then Rozkaz('trftrln'#9'id30'#9'naNIP nabywcy '+firmy_nip);
-
-              Rozkaz('trftrend');
 
               s:=Pytanie(Rozkaz('scnt'),'bn');
               parnum:=StrToIntDef(s,0);
@@ -3427,6 +3442,12 @@ begin
      Label4.Caption:='Kluczyk';
      DisplayList[6]:=Label4.Caption;
      Raise EInOutError.Create('Przekrêæ kluczyk !');
+   end else if PageControl1.ActivePage=tsABC then with MdDBGrid2 do begin
+     Klucz:='';
+     Ceny.IndexFieldNames:=CenyINDEX.FieldName;
+     if not Ceny.FindKey([str]) then Exit;
+     SelectedField:=CenyCENA;
+     SetFocus;
    end else with Edit1 do begin
      //DisplayList[6]:=Str;
      If Visible Then SetFocus;

@@ -2603,7 +2603,7 @@ object MainForm: TMainForm
       Top = 0
       Width = 748
       Height = 659
-      ActivePage = tsSpec
+      ActivePage = tsABC
       Align = alClient
       MultiLine = True
       OwnerDraw = True
@@ -3886,8 +3886,8 @@ object MainForm: TMainForm
           Tag = -1
           Left = 0
           Top = 0
-          Width = 886
-          Height = 640
+          Width = 740
+          Height = 579
           TabStop = False
           Align = alClient
           ColCount = 7
@@ -4086,8 +4086,8 @@ object MainForm: TMainForm
         object MdDBGrid2: TMdDBGrid
           Left = 0
           Top = 0
-          Width = 886
-          Height = 640
+          Width = 740
+          Height = 579
           TabStop = False
           Align = alClient
           DataSource = DSCeny
@@ -4821,10 +4821,12 @@ object MainForm: TMainForm
     end
   end
   object AdsConnection1: TAdsConnection
-    ConnectPath = 'E:\d5\paragony'
+    ConnectPath = 'E:\m\polok\paragony'
     AdsServerTypes = [stADS_LOCAL]
     LoginPrompt = False
     StoreConnected = False
+    Compression = ccAdsCompressionNotSet
+    CommunicationType = ctAdsDefault
     Left = 152
     Top = 104
   end
@@ -5290,7 +5292,7 @@ object MainForm: TMainForm
       item
         Name = 'TANDEM'
         DataType = ftString
-        Size = 1
+        Size = 12
       end>
     StoreDefs = True
     IndexFiles.Strings = (
@@ -5337,10 +5339,10 @@ object MainForm: TMainForm
     end
   end
   object Ceny: TAdsTable
+    IndexFieldNames = 'INDEX'
     StoreActive = False
     AdsConnection = AdsConnection1
     AdsTableOptions.AdsCharType = OEM
-    AdsTableOptions.AdsIndexPageSize = 1024
     FieldDefs = <
       item
         Name = 'INDEX'
@@ -5388,6 +5390,8 @@ object MainForm: TMainForm
         Size = 12
       end>
     StoreDefs = True
+    IndexFiles.Strings = (
+      'index.ntx')
     ReadOnly = True
     TableName = 'cennik.dbf'
     TableType = ttAdsNTX
@@ -5439,7 +5443,7 @@ object MainForm: TMainForm
   object DSCeny: TDataSource
     DataSet = Ceny
     Left = 260
-    Top = 224
+    Top = 264
   end
   object ComPort1: TComPort
     BaudRate = br9600
@@ -5513,8 +5517,12 @@ object MainForm: TMainForm
   end
   object AdsSettings1: TAdsSettings
     DateFormat = 'yyyy-MM-dd'
+    NumDecimals = 2
+    SetDelphiDate = True
     ShowDeleted = False
     AdsServerTypes = [stADS_LOCAL]
+    NumCachedTables = 0
+    NumCachedCursors = 25
     Left = 120
     Top = 104
   end
@@ -5958,6 +5966,8 @@ object MainForm: TMainForm
     AdsServerTypes = [stADS_LOCAL]
     LoginPrompt = False
     StoreConnected = False
+    Compression = ccAdsCompressionNotSet
+    CommunicationType = ctAdsDefault
     Left = 24
     Top = 160
   end
@@ -6327,6 +6337,7 @@ object MainForm: TMainForm
     Filter = 'P_R<>"P"'
     Filtered = True
     IndexFieldNames = 'NAZWA'
+    StoreActive = True
     AdsConnection = AdsConnection1
     AdsTableOptions.AdsLockType = Compatible
     AdsTableOptions.AdsCharType = OEM
