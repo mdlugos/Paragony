@@ -1712,8 +1712,9 @@ begin
 {$endif}
           Rozkaz('trinit');
           for i:=0 to length(aka)-1 do
-             PrintOut(Format('trpack'#9'ne%s'#9'pr%d'#9'il%.3f'#9,
-                  [iif(aka[i].p<0,'1','0'),System.Round(aka[i].ka*100),aka[i].il]));
+             PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
+                  [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100.0),aka[i].il,aka[i].kan]));
+
         end;
 {$ifdef ELZAB}
         Elzab: begin
@@ -1736,11 +1737,14 @@ begin
             if w<0 Then i:=7 Else if il<0 Then i:=10 Else i:=6;
             PrintOutTh(Format('%d$l%s'#13'il%.3f'#13'P/%s/0/',[i,kak,abs(il*ki),str(ka)]));
            end;
-        Posnet: begin
+        Posnet:
+        begin
           s:='trpack'#9
              +'pr'+IntToStr(System.Round(ka*100))+#9
              +'il'+FloatToStr(abs(il*ki))+#9
-             +'wa'+FloatToStr(abs(il*ki)*ka*100)+#9;
+             +'wa'+FloatToStr(abs(il*ki)*ka*100)+#9
+             +'na'+kak+#9
+             +'de'+kan+#9;
           if w<0 Then
             s:=s+'st1'#9
           Else if il<0 Then
@@ -2125,9 +2129,18 @@ begin
    c:=0;
    z:=0;
    if copy(buf,1,1)='B' Then begin
+       s:=m.zwrot;
        Razem();
        buf:=copy(buf,2,maxint);
-       m.zwrot:='O';
+       if (s='S') then begin
+          if (m.il>0) then
+             m.zwrot:='B'
+          else begin
+             m.zwrot:='O';
+             m.il:=-m.il;
+          end;
+       end else
+          m.zwrot:='O';
    end else if (length(buf)<=6) Then begin
        buf:=Format('%6.6d',[StrToIntDef(buf,0)]);
    end else if (length(buf)>=12) and (copy(buf,1,2)='28') Then
@@ -2268,6 +2281,7 @@ begin
 
    with m^, Paragony do if zwrot='S' then
    try
+      buf:='B'+m.kak; // razem to skasuje potem
       DisableControls;
       Last;
       repeat
@@ -2279,9 +2293,13 @@ begin
          s:=Bookmark;
          showline(True);
          Razem;
-         delete;
+         if FieldByName('INDEX').AsString=buf then //butelka
+            Delete; // i cofam sie wstecz bo jestem na koncu
+         Delete;
          Bookmark:=s;
-         delete;
+         Delete;
+         if FieldByName('INDEX').AsString=buf then //butelka
+            Delete;
          Last;
          Edit1.Text:='ILOŒÆ/KOD';
          Edit1.SelectAll;
@@ -2293,6 +2311,7 @@ begin
       Last;
       il:=-abs(il);
       rk:=-abs(rk);
+      Exit;
    finally
       EnableControls;
    end;
