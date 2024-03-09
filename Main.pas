@@ -1072,13 +1072,13 @@ begin
         Then Raise EInOutError.Create(t);
      end;
 
-     Delete(s,1,x); //jeden rozkaz mniej w buforze
-
      t:=Pytanie(Result,'?');
      if (t>'') Then begin
        Delete(Result,Length(Result),1);
-       Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[t]);
+       Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+s+#10'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[t]);
      end;
+
+     Delete(s,1,x); //jeden rozkaz mniej w buforze
 
      y:=Max(Pos(#9,r),Pos(#9,Result))-1;
    until Copy(Result,1,y) = Copy(r,1,y);
@@ -2538,21 +2538,21 @@ begin
               if tkz<>0  then s:=s+Format('om%.0f'#9,[tkz*100]);
               if (wg+wc+max(wb,0)+wk+tz)<>0 then s:=s+Format('fp%.0f'#9,[(wg+wc+max(wb,0)+wk+tz)*100]);
               if a<>0 then s:=s+Format('re%.0f'#9,[a*100]);
-              if (aka<>nil) or ((firmy_nip<>'') and (wersja<20.01)) then s:=s+Format('fe%d'#9,[0]);
+              if (wersja<20.01) and ((aka<>nil) or (firmy_nip<>'')) then s:=s+Format('fe%d'#9,[0]);
 
               //Format('trend'#9'fe%d'#9'to%.0f'#9'op%.0f'#9'om%.0f'#9'fp%.0f'#9're%.0f',
               //       [{iif((aka=nil),1,0)}0,(tp-rkt)*100,tk*100,tkz*100,(wg+wc+max(wb,0)+wk+tz)*100,a*100]); //(wg+wc+wb+wk-t)*100
               Rozkaz(s);
 
-              if (aka<>nil) or ((firmy_nip<>'') and (wersja<20.01)) Then begin
+              if (wersja<20.01) and ((aka<>nil) or (firmy_nip<>'')) Then begin
                 if (aka<>nil) then for i:=0 To Length(aka)-1 do
-                  PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
+                  PrintOut(Format('trpackprnend'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
                        [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100.0),aka[i].il,aka[i].kan]));
-                if (firmy_nip<>'') and (wersja<20.01) then PrintOut('trftrln'#9'id30'#9'naNIP nabywcy '+firmy_nip);
-
-                Rozkaz('trftrend');
+                if (firmy_nip<>'') and (wersja<20.01) then begin
+                   PrintOut('trftrln'#9'id30'#9'naNIP nabywcy '+firmy_nip);
+                end;
+                PrintOut('trftrend');
               end;
-
 
               s:=Pytanie(Rozkaz('scnt'),'bn');
               parnum:=StrToIntDef(s,0);

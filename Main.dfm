@@ -2084,7 +2084,7 @@ object MainForm: TMainForm
       Font.Name = 'Lucida Console'
       Font.Style = []
       PanelHeight = 64
-      PanelWidth = 269
+      PanelWidth = 268
       ParentFont = False
       TabOrder = 1
       TabStop = False
