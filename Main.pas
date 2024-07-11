@@ -2635,38 +2635,40 @@ begin
                Then parnum:=StrToIntDef(Pytanie(Rozkaz('scnt'),'hn'),0);
            end;
       end;
-      if (lp<>0) or (tk<>0) or (tkz<>0) then with Paragony do try
+      if (lp<>0) or (tk<>0) or (tkz<>0) or (tz<>0) then with Paragony do try
         DisableControls;
-        Last;
-        while (Copy(Paragonyindex.AsString,1,1)<'P') and not bof do
-          Prior;
+        if (lp<>0) or (tk<>0) or (tkz<>0) then begin
+          Last;
+          while (Copy(Paragonyindex.AsString,1,1)<'P') and not bof do
+            Prior;
 
-        Edit;
-        Paragonyrabat_kwot.asCurrency:=rkt;
-        Paragonyrabat_proc.asCurrency:=rpt;
+          Edit;
+          Paragonyrabat_kwot.asCurrency:=rkt;
+          Paragonyrabat_proc.asCurrency:=rpt;
 
-        i:=0;
-        if (tz<>0) or (tp<0) Then Inc(i,1); //'a'
-        if wb>0 Then Inc(i,2);              //'b'
-        if wk<>0 Then Inc(i,4);             //'d'
-        if wg<>0 Then Inc(i,8);             //'h'
-        if wc<>0 Then Inc(i,16);
+          i:=0;
+          if (tz<>0) or (tp<0) Then Inc(i,1); //'a'
+          if wb>0 Then Inc(i,2);              //'b'
+          if wk<>0 Then Inc(i,4);             //'d'
+          if wg<>0 Then Inc(i,8);             //'h'
+          if wc<>0 Then Inc(i,16);
 
-        case dr of
-          None: begin
-              ParagonySTAWKA.AsString:=Char(i+$60); // lower
-{$ifdef NOPRINT}
-              IF wk<>0 Then ParagonyIlosc.AsCurrency:=wk
-                else if wc<>0 Then ParagonyIlosc.AsCurrency:=wc
-                else if wb>0 Then ParagonyIlosc.AsCurrency:=wb
-                else ParagonyIlosc.AsCurrency:=0;
-              ParagonyCena.AsCurrency:=wg;
-{$endif}
-            end;
-        else
-          ParagonyCena.AsCurrency:=tp;
-          ParagonyIlosc.AsFloat:=parnum+Time;
-          ParagonySTAWKA.AsString:=Char(i+$40); // upper
+          case dr of
+            None: begin
+                ParagonySTAWKA.AsString:=Char(i+$60); // lower
+  {$ifdef NOPRINT}
+                IF wk<>0 Then ParagonyIlosc.AsCurrency:=wk
+                  else if wc<>0 Then ParagonyIlosc.AsCurrency:=wc
+                  else if wb>0 Then ParagonyIlosc.AsCurrency:=wb
+                  else ParagonyIlosc.AsCurrency:=0;
+                ParagonyCena.AsCurrency:=wg;
+  {$endif}
+              end;
+          else
+            ParagonyCena.AsCurrency:=tp;
+            ParagonyIlosc.AsFloat:=parnum+Time;
+            ParagonySTAWKA.AsString:=Char(i+$40); // upper
+          end;
         end;
 {$ifdef PUNKTY}
         if (klij_nr<>0) then begin
