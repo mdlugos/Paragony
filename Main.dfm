@@ -2603,7 +2603,7 @@ object MainForm: TMainForm
       Top = 0
       Width = 748
       Height = 659
-      ActivePage = tsABC
+      ActivePage = ts0
       Align = alClient
       MultiLine = True
       OwnerDraw = True
@@ -4821,7 +4821,7 @@ object MainForm: TMainForm
     end
   end
   object AdsConnection1: TAdsConnection
-    ConnectPath = 'E:\m\polok\paragony'
+    ConnectPath = '.\'
     AdsServerTypes = [stADS_LOCAL]
     LoginPrompt = False
     StoreConnected = False

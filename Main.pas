@@ -1072,13 +1072,13 @@ begin
         Then Raise EInOutError.Create(t);
      end;
 
-     Delete(s,1,x); //jeden rozkaz mniej w buforze
-
      t:=Pytanie(Result,'?');
      if (t>'') Then begin
        Delete(Result,Length(Result),1);
-       Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[t]);
+       Raise EInOutError.Create('Drukarka podczas wykonywania rozkazu:'#10+r+#10+s+#10'zwróci³a b³¹d: '+Result+#10+MainForm.ErrorList.Values[t]);
      end;
+
+     Delete(s,1,x); //jeden rozkaz mniej w buforze
 
      y:=Max(Pos(#9,r),Pos(#9,Result))-1;
    until Copy(Result,1,y) = Copy(r,1,y);
@@ -1712,8 +1712,9 @@ begin
 {$endif}
           Rozkaz('trinit');
           for i:=0 to length(aka)-1 do
-             PrintOut(Format('trpack'#9'ne%s'#9'pr%d'#9'il%.3f'#9,
-                  [iif(aka[i].p<0,'1','0'),System.Round(aka[i].ka*100),aka[i].il]));
+             PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
+                  [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100.0),aka[i].il,aka[i].kan]));
+
         end;
 {$ifdef ELZAB}
         Elzab: begin
@@ -1736,11 +1737,14 @@ begin
             if w<0 Then i:=7 Else if il<0 Then i:=10 Else i:=6;
             PrintOutTh(Format('%d$l%s'#13'il%.3f'#13'P/%s/0/',[i,kak,abs(il*ki),str(ka)]));
            end;
-        Posnet: begin
+        Posnet:
+        begin
           s:='trpack'#9
              +'pr'+IntToStr(System.Round(ka*100))+#9
              +'il'+FloatToStr(abs(il*ki))+#9
-             +'wa'+FloatToStr(abs(il*ki)*ka*100)+#9;
+             +'wa'+FloatToStr(abs(il*ki)*ka*100)+#9
+             +'na'+kak+#9
+             +'de'+kan+#9;
           if w<0 Then
             s:=s+'st1'#9
           Else if il<0 Then
@@ -2125,9 +2129,18 @@ begin
    c:=0;
    z:=0;
    if copy(buf,1,1)='B' Then begin
+       s:=m.zwrot;
        Razem();
        buf:=copy(buf,2,maxint);
-       m.zwrot:='O';
+       if (s='S') then begin
+          if (m.il>0) then
+             m.zwrot:='B'
+          else begin
+             m.zwrot:='O';
+             m.il:=-m.il;
+          end;
+       end else
+          m.zwrot:='O';
    end else if (length(buf)<=6) Then begin
        buf:=Format('%6.6d',[StrToIntDef(buf,0)]);
    end else if (length(buf)>=12) and (copy(buf,1,2)='28') Then
@@ -2268,6 +2281,7 @@ begin
 
    with m^, Paragony do if zwrot='S' then
    try
+      buf:='B'+m.kak; // razem to skasuje potem
       DisableControls;
       Last;
       repeat
@@ -2279,9 +2293,13 @@ begin
          s:=Bookmark;
          showline(True);
          Razem;
-         delete;
+         if FieldByName('INDEX').AsString=buf then //butelka
+            Delete; // i cofam sie wstecz bo jestem na koncu
+         Delete;
          Bookmark:=s;
-         delete;
+         Delete;
+         if FieldByName('INDEX').AsString=buf then //butelka
+            Delete;
          Last;
          Edit1.Text:='ILOŒÆ/KOD';
          Edit1.SelectAll;
@@ -2293,6 +2311,7 @@ begin
       Last;
       il:=-abs(il);
       rk:=-abs(rk);
+      Exit;
    finally
       EnableControls;
    end;
@@ -2538,21 +2557,21 @@ begin
               if tkz<>0  then s:=s+Format('om%.0f'#9,[tkz*100]);
               if (wg+wc+max(wb,0)+wk+tz)<>0 then s:=s+Format('fp%.0f'#9,[(wg+wc+max(wb,0)+wk+tz)*100]);
               if a<>0 then s:=s+Format('re%.0f'#9,[a*100]);
-              if (aka<>nil) or ((firmy_nip<>'') and (wersja<20.01)) then s:=s+Format('fe%d'#9,[0]);
+              if (wersja<20.01) and ((aka<>nil) or (firmy_nip<>'')) then s:=s+Format('fe%d'#9,[0]);
 
               //Format('trend'#9'fe%d'#9'to%.0f'#9'op%.0f'#9'om%.0f'#9'fp%.0f'#9're%.0f',
               //       [{iif((aka=nil),1,0)}0,(tp-rkt)*100,tk*100,tkz*100,(wg+wc+max(wb,0)+wk+tz)*100,a*100]); //(wg+wc+wb+wk-t)*100
               Rozkaz(s);
 
-              if (aka<>nil) or ((firmy_nip<>'') and (wersja<20.01)) Then begin
+              if (wersja<20.01) and ((aka<>nil) or (firmy_nip<>'')) Then begin
                 if (aka<>nil) then for i:=0 To Length(aka)-1 do
-                  PrintOut(Format('trpack'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
+                  PrintOut(Format('trpackprnend'#9'na%s'#9'ne%d'#9'pr%d'#9'il%.3f'#9'de%s'#9,
                        [aka[i].kak,iif(aka[i].p>0,0,1),System.Round(aka[i].ka*100.0),aka[i].il,aka[i].kan]));
-                if (firmy_nip<>'') and (wersja<20.01) then PrintOut('trftrln'#9'id30'#9'naNIP nabywcy '+firmy_nip);
-
-                Rozkaz('trftrend');
+                if (firmy_nip<>'') and (wersja<20.01) then begin
+                   PrintOut('trftrln'#9'id30'#9'naNIP nabywcy '+firmy_nip);
+                end;
+                PrintOut('trftrend');
               end;
-
 
               s:=Pytanie(Rozkaz('scnt'),'bn');
               parnum:=StrToIntDef(s,0);
@@ -4723,6 +4742,7 @@ end;
 procedure TMainForm.Timer1Timer(Sender: TObject);
   const tm: TDateTime = 0.0;
         fc: Byte = 20;
+        inside: Boolean = False;
   var p,q,r,s,t: String;
   l: TStringList;
   d: TDate;
@@ -4732,7 +4752,7 @@ procedure TMainForm.Timer1Timer(Sender: TObject);
   i: Integer;
 {$endif}
 begin
-  if Application.Terminated or ( sender<>nil ) and ( Time<tm ) or
+  if inside or Application.Terminated or ( sender<>nil ) and ( Time<tm ) or
 {$ifdef MULTIPAR}
    (not ParJob.Active or not ParJob.isempty and (ParJobIndex.AsString<>'KONIEC'))
 {$else}
@@ -4740,6 +4760,7 @@ begin
 {$endif}
    Then Exit;
 
+  inside:=True;
   tm:=Time+1/8192;
 
   Paragony.AdsFlushFileBuffers;
@@ -5007,7 +5028,9 @@ begin
   end;
   except // nie czyta pytan z hosta
      FindClose(f);
+     inside:=False;
   end;
+  inside:=False;
 end;
 
 procedure TMainForm.SpeedButton15Click(Sender: TObject);
