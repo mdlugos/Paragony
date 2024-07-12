@@ -2211,7 +2211,7 @@ begin
     if v[7]=Null
        Then v[7]:=False;
 {$endif}
-   if (m.zwrot=#0) and ((buf<>m.tow) or (m.ce-z<>0) or (m.rk<>0)
+   if (m.zwrot=#0) and (m.tow<>'') and ((buf<>m.tow) or (m.ce-z<>0) or (m.rk<>0)
     {$ifdef HURT} and (m.rp=0) (*or (m.rp<>varastype(v[4],varCurrency))*){$endif}) then
         Razem();
 
@@ -2239,6 +2239,7 @@ begin
 
    if (m.zwrot=#0) and (m.il<0) Then begin
      m.il:=-m.il;
+     m.rk:=-m.rk;
      m.zwrot:='Z';
    end;
 
@@ -2271,6 +2272,7 @@ begin
 
    if m.zwrot='Z' then begin
      m.il:=-m.il;
+     m.rk:=-m.rk;
      showline(True);
      Razem;
      Edit1.Text:='ILOŒÆ/KOD';
@@ -3803,7 +3805,7 @@ begin
      DisplayList[6]:=Label4.Caption;
      Raise EInOutError.Create('Przekrêæ kluczyk do 2!');
   end;
-  Razem;
+  if m.Tow<>'' then Razem;
   m.Zwrot:='Z';
   Keylock:=1;
   Panel4.Caption:=m.firmy_fak+' '+
